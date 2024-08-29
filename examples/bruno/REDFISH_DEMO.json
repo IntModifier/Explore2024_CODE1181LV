@@ -1,0 +1,181 @@
+{
+  "name": "REDFISH_DEMO",
+  "version": "1",
+  "items": [
+    {
+      "type": "http",
+      "name": "1-system-settings",
+      "seq": 1,
+      "request": {
+        "url": "https://{{server-hostname}}/redfish/v1/Systems/System.Embedded.1/Bios",
+        "method": "GET",
+        "headers": [],
+        "params": [],
+        "body": {
+          "mode": "none",
+          "formUrlEncoded": [],
+          "multipartForm": []
+        },
+        "script": {},
+        "vars": {},
+        "assertions": [],
+        "tests": "",
+        "auth": {
+          "mode": "inherit"
+        }
+      }
+    },
+    {
+      "type": "http",
+      "name": "2-service-tag",
+      "seq": 2,
+      "request": {
+        "url": "https://{{server-hostname}}/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellSystem/System.Embedded.1",
+        "method": "GET",
+        "headers": [],
+        "params": [],
+        "body": {
+          "mode": "none",
+          "formUrlEncoded": [],
+          "multipartForm": []
+        },
+        "script": {},
+        "vars": {},
+        "assertions": [],
+        "tests": "",
+        "auth": {
+          "mode": "none"
+        }
+      }
+    },
+    {
+      "type": "http",
+      "name": "3-raid-fw-info",
+      "seq": 3,
+      "request": {
+        "url": "https://{{server-hostname}}/redfish/v1/UpdateService/FirmwareInventory/Installed-0-51.16.0-5150__RAID.SL.3-1",
+        "method": "GET",
+        "headers": [],
+        "params": [],
+        "body": {
+          "mode": "none",
+          "formUrlEncoded": [],
+          "multipartForm": []
+        },
+        "script": {},
+        "vars": {},
+        "assertions": [],
+        "tests": "",
+        "auth": {
+          "mode": "inherit"
+        }
+      }
+    },
+    {
+      "type": "http",
+      "name": "4-boot-mode",
+      "seq": 4,
+      "request": {
+        "url": "https://{{server-hostname}}/redfish/v1/Systems/System.Embedded.1/Bios",
+        "method": "PATCH",
+        "headers": [],
+        "params": [],
+        "body": {
+          "mode": "json",
+          "json": "{\n  \"Attributes\": {\n    \"BootMode\": \"UEFI\",\n    \"SecureBoot\": \"Enabled\"\n  }\n}",
+          "formUrlEncoded": [],
+          "multipartForm": []
+        },
+        "script": {},
+        "vars": {},
+        "assertions": [],
+        "tests": "",
+        "auth": {
+          "mode": "inherit"
+        }
+      }
+    },
+    {
+      "type": "http",
+      "name": "5-vmedia-info",
+      "seq": 5,
+      "request": {
+        "url": "https://{{server-hostname}}/redfish/v1/Managers/iDRAC.Embedded.1/VirtualMedia/CD/",
+        "method": "GET",
+        "headers": [],
+        "params": [],
+        "body": {
+          "mode": "json",
+          "json": "",
+          "formUrlEncoded": [],
+          "multipartForm": []
+        },
+        "script": {},
+        "vars": {},
+        "assertions": [],
+        "tests": "",
+        "auth": {
+          "mode": "inherit"
+        }
+      }
+    },
+    {
+      "type": "http",
+      "name": "6-vmedia-mount-iso",
+      "seq": 6,
+      "request": {
+        "url": "https://{{server-hostname}}/redfish/v1/Managers/iDRAC.Embedded.1/VirtualMedia/CD/Actions/VirtualMedia.InsertMedia",
+        "method": "POST",
+        "headers": [],
+        "params": [],
+        "body": {
+          "mode": "json",
+          "json": "{\n    \"Image\": \"http://web-server.com/esxi-install.iso\"\n}",
+          "formUrlEncoded": [],
+          "multipartForm": []
+        },
+        "script": {},
+        "vars": {},
+        "assertions": [],
+        "tests": "",
+        "auth": {
+          "mode": "inherit"
+        }
+      }
+    }
+  ],
+  "environments": [
+    {
+      "variables": [
+        {
+          "name": "server-hostname",
+          "value": "localhost:8000",
+          "enabled": true,
+          "secret": false,
+          "type": "text"
+        }
+      ],
+      "name": "REDFISH_DEMO"
+    }
+  ],
+  "root": {
+    "request": {
+      "auth": {
+        "mode": "basic",
+        "basic": {
+          "username": "root",
+          "password": "calvin"
+        }
+      }
+    }
+  },
+  "brunoConfig": {
+    "version": "1",
+    "name": "REDFISH_DEMO",
+    "type": "collection",
+    "ignore": [
+      "node_modules",
+      ".git"
+    ]
+  }
+}
