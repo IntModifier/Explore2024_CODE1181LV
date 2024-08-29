@@ -1,0 +1,1 @@
+#Ansible Examples from talk
