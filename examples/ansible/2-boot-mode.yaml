@@ -1,0 +1,17 @@
+# code: language= ansible
+---
+- name: Redfish Demo Playbook
+  hosts: localhost
+  connection: local
+  gather_facts: true
+  tasks:
+    - name: Set BootMode to UEFI
+      community.general.redfish_config:
+        baseuri: "localhost:8000"
+        username: "root"
+        password: "calvin"
+        category: Systems
+        command: SetBiosAttributes
+        bios_attributes:
+          BootMode: "Uefi"
+          SecureBoot: "Enabled"

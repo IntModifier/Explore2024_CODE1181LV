@@ -1,0 +1,20 @@
+# code: language= ansible
+---
+- name: Redfish Demo Playbook
+  hosts: localhost
+  connection: local
+  gather_facts: true
+  tasks:
+    - name: Get System Inventory
+      community.general.redfish_info:
+        category: "Manager"
+        command: "GetVirtualMedia"
+        baseuri: "localhost:8000"
+        username: "root"
+        password: "calvin"
+      register: facts
+      timeout: 10
+
+    - name: Show system info from variable
+      ansible.builtin.debug:
+        msg: "{{ facts.redfish_facts }}"

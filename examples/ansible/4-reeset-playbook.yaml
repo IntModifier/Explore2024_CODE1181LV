@@ -1,0 +1,125 @@
+# code: language=ansible
+---
+- name: Host Build Automation Playbook
+  hosts: localhost
+  connection: local
+  gather_facts: true
+  tasks:
+    - name: Variables for {{ model }}
+      ansible.builtin.include_vars:
+        file: "{{ inventory_dir }}/group_vars/{{ model }}.yml"
+      no_log: true
+
+    - name: Reset iDRAC to facotry defualts
+      ansible.builtin.uri:
+        url: "https://{{ idrac_dhcp_address }}/redfish/v1/Managers/iDRAC.Embedded.1/Actions/Oem/DellManager.ResetToDefaults"
+        user: "{{ idrac_user }}"
+        password: "{{ idrac_password }}"
+        method: POST
+        status_code: 200
+        return_content: true
+        validate_certs: false
+        body_format: 'json'
+        body: {'ResetType':'ResetAllWithRootDefaults'}
+      register: result
+      until: result is not failed
+      retries: 5
+      delay: 30
+
+    - name: Wait for iDRAC Webpage to shutdown
+      ansible.builtin.wait_for:
+        host: "{{ ip_address }}"
+        port: 443
+        delay: 10
+        timeout: 600
+        state: stopped
+
+    - name: Wait for iDrac SSH to shutdown
+      ansible.builtin.wait_for:
+        host: "{{ ip_address }}"
+        port: 22
+        delay: 10
+        timeout: 600
+        state: stopped
+
+    - name: Wiat for idrac webpage
+      ansible.builtin.uri:
+        url: "https://{{ ip_address }}"
+        user: "{{ username }}"
+        password: "{{ password }}"
+        method: GET
+        return_content: true
+        validate_certs: false
+      register: idrac_web_result
+      until:
+        - idrac_web_result is not failed
+        - idrac_web_result.status == 200
+      retries: 30
+      delay: 30
+
+    - name: Wait for Redfish API to be responseive
+      ansible.builtin.uri:
+        url: "https://{{ ip_address }}/redfish/v1/Managers/iDRAC.Embedded.1/Oem/Dell/DellAttributes/System.Embedded.1?$select=Attributes/SystemInfo.1.BootTime"
+        user: "{{ username }}"
+        password: "{{ password }}"
+        method: GET
+        status_code: 200
+        return_content: true
+        validate_certs: false
+      register: result
+      until:
+        - result is not failed
+        - result.json.Attributes['SystemInfo.1.BootTime'] | length>0
+      retries: 30
+      delay: 30
+
+    - name: Set BIOS default settings
+      community.general.redfish_config:
+        category: Systems
+        command: SetBiosDefaultSettings
+        baseuri: '{{ idrac_ip }}'
+        username: '{{ idrac_user }}'
+        password: '{{ idrac_password }}'
+        timeout: 300
+      register: bios_default_result
+      until: bios_default_result is not failed
+      retries: 10
+      delay: 30
+
+    - name: Reset config of {{ controller }}
+      dellemc.openmanage.idrac_redfish_storage_controller:
+        baseuri: '{{ ip }}'
+        username: '{{ username }}'
+        password: '{{ password }}'
+        validate_certs: false
+        command: "ResetConfig"
+        controller_id: "{{ controller }}"
+        job_wait: true
+        job_wait_timeout: 3000
+        timeout: 300
+
+    - name: Wait for server to pass POST
+      ansible.builtin.uri:
+        url: "https://{{ idrac_ip }}/redfish/v1/Managers/iDRAC.Embedded.1/Oem/Dell/DellAttributes/System.Embedded.1?$select=Attributes/SystemInfo.1.BootTime"
+        user: "{{ idrac_user }}"
+        password: "{{ idrac_password }}"
+        method: GET
+        status_code: 200
+        return_content: true
+        validate_certs: false
+      register: result
+      until:
+        - result is not failed
+        - result.json.Attributes['SystemInfo.1.BootTime'] | length > 0
+      retries: 30
+      delay: 30
+
+    - name: Delete Lifecycle Controller job queue
+      dellemc.openmanage.idrac_lifecycle_controller_jobs:
+        idrac_ip: '{{ idrac_ip }}'
+        idrac_user: '{{ idrac_user }}'
+        idrac_password: '{{ idrac_password }}'
+        validate_certs: false
+        timeout: 300
+      retries: 10
+      delay: 30
